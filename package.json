@@ -41,8 +41,9 @@
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
     "test:watch": "vitest",
+    "prepare": "npm run build",
     "prepack": "npm run build"
-  },
+  }
   "dependencies": {
     "@fastify/compress": "^8.3.0",
     "@fastify/cookie": "^11.0.2",
