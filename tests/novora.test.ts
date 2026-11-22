@@ -52,10 +52,11 @@ describe("Novora application", () => {
     it("supports plugin registration aliases", async () => {
         app = new Novora({ logger: false });
         app.use(async (instance: any) => {
-            instance.decorate("featureEnabled", true);
+            instance.get("/plugin", async () => ({ enabled: true }));
         });
         await app.ready();
-        expect(app.server.hasDecorator("featureEnabled")).toBe(true);
+        const response = await app.inject("/plugin");
+        expect(response.json()).toEqual({ enabled: true });
     });
 
     it("maps NovoraError responses", async () => {

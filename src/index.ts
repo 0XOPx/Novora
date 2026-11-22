@@ -165,11 +165,12 @@ export class Novora {
 
     setErrorHandler(handler: (error: Error, request: any, reply: any) => unknown): this {
         this.server.setErrorHandler((error, request, reply) => {
-            if (error instanceof NovoraError) {
-                return reply.code(error.statusCode).send({
-                    error: error.code,
-                    message: error.message,
-                    details: error.details
+            const candidate = error as Error & { statusCode?: number; code?: string; details?: unknown };
+            if (error instanceof NovoraError || (typeof candidate.statusCode === "number" && candidate.statusCode >= 400 && candidate.statusCode <= 599)) {
+                return reply.code(candidate.statusCode ?? 500).send({
+                    error: candidate.code ?? "NOVORA_ERROR",
+                    message: candidate.message,
+                    details: candidate.details
                 });
             }
             return handler(error as Error, request, reply);
