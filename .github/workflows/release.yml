@@ -2,7 +2,6 @@ name: Release
 
 on:
   push:
-    branches: [main]
     tags:
       - "v*"
 
@@ -22,17 +21,8 @@ jobs:
       - run: npm run typecheck
       - run: npm test
       - run: npm run build
-      - name: Package distribution
-        run: npm pack
+      - run: npm pack
       - name: Create GitHub Release
         env:
           GH_TOKEN: ${{ github.token }}
-        run: |
-          if [ "${GITHUB_REF_TYPE}" = "tag" ]; then
-            VERSION="${GITHUB_REF_NAME}"
-          else
-            VERSION="v0.1.0"
-          fi
-          if ! gh release view "${VERSION}" >/dev/null 2>&1; then
-            gh release create "${VERSION}" ./*.tgz --target "${GITHUB_SHA}" --title "Novora ${VERSION}" --generate-notes
-          fi
+        run: gh release create "${GITHUB_REF_NAME}" ./*.tgz --title "Novora ${GITHUB_REF_NAME}" --generate-notes
