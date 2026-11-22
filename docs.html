@@ -1,0 +1,106 @@
+<!doctype html>
+<html lang="en">
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="description" content="Complete Novora v1.0.0 documentation: installation, application API, routing, utilities, types and integrations."><title>Documentation — Novora</title><link rel="icon" href="assets/favicon.svg" type="image/svg+xml"><link rel="stylesheet" href="assets/styles.css"></head>
+<body>
+<header class="topbar"><a class="brand" href="index.html"><span class="brand-mark">N</span><span>novora</span><span class="version">v1.0.0</span></a><button class="menu-toggle" aria-label="Toggle navigation">☰</button><nav class="main-nav"><a href="index.html">Home</a><a class="active" href="docs.html">Documentation</a><a href="examples.html">Examples</a><a href="playground.html">Playground</a></nav><a class="github-link" href="https://github.com/0XOPx/Novora" target="_blank" rel="noreferrer">GitHub ↗</a></header>
+<div class="docs-layout"><aside class="sidebar"><div class="sidebar-title">DOCUMENTATION</div><a href="#introduction">Introduction</a><a href="#installation">Installation</a><a href="#quick-start">Quick start</a><a href="#typescript">TypeScript</a><div class="sidebar-title">CORE CONCEPTS</div><a href="#application">Application</a><a href="#routing">Routing</a><a href="#plugins">Plugins and hooks</a><a href="#health">Health endpoint</a><a href="#server-lifecycle">Server lifecycle</a><div class="sidebar-title">UTILITIES</div><a href="#validation">Validation</a><a href="#cache">TTL cache</a><a href="#configuration">Configuration</a><a href="#errors">Errors</a><div class="sidebar-title">REFERENCE</div><a href="#types">Exported types</a><a href="#integrations">Integrations</a><a href="#development">Development</a><a href="#license">License</a></aside>
+<main class="docs-main"><div class="docs-topline"><span>GUIDES & API REFERENCE</span><span>Novora v1.0.0</span></div><section class="doc-section" id="introduction"><div class="eyebrow">START HERE</div><h1>Novora documentation</h1><p class="lead">Novora is a feature-rich web framework for building APIs and web servers with Node.js or Bun, using JavaScript or TypeScript. It wraps Fastify with a focused API and re-exports a broad set of useful integrations.</p><div class="callout"><strong>Runtime requirements</strong><p>Node.js 22 or newer. Bun 1.2 or newer is supported; Bun can execute TypeScript files directly.</p></div></section>
+<section class="doc-section" id="installation"><h2>Installation</h2><p>Install the package directly from the GitHub repository.</p><div class="code-block"><div class="code-head"><span>npm</span><button class="copy-button">Copy</button></div><pre><code>npm install github:0XOPx/Novora</code></pre></div><div class="code-block"><div class="code-head"><span>Bun</span><button class="copy-button">Copy</button></div><pre><code>bun add github:0XOPx/Novora</code></pre></div><p>Novora publishes ESM, CommonJS and TypeScript declaration files in its package build. Import from <code>novora</code>, or use the <code>./cache</code>, <code>./validation</code>, <code>./config</code> and <code>./errors</code> subpaths.</p></section>
+<section class="doc-section" id="quick-start"><h2>Quick start</h2><p>Create an application, register any plugins you need, define routes, and start listening.</p><div class="code-block"><div class="code-head"><span>server.js</span><button class="copy-button">Copy</button></div><pre><code>import { Novora, cors, helmet, compress, rateLimit } from "novora";
+
+const app = new Novora({ logger: true });
+
+await app.register(cors, { origin: true });
+await app.register(helmet);
+await app.register(compress);
+await app.register(rateLimit, { max: 100, timeWindow: "1 minute" });
+
+app.get("/", async (request, reply) => {
+    return reply.send({ message: "Hello from Novora!" });
+});
+
+app.health();
+
+await app.listen(3000);</code></pre></div></section>
+<section class="doc-section" id="typescript"><h2>TypeScript</h2><p>Novora exports its public Fastify types and its own option and plugin aliases. With Node.js, run TypeScript using a compatible loader such as <code>tsx</code>, or compile it first. Bun supports native TypeScript execution.</p><div class="code-block"><div class="code-head"><span>server.ts</span><button class="copy-button">Copy</button></div><pre><code>import { Novora, z, validate } from "novora";
+
+const app = new Novora({ logger: true });
+
+app.route({
+    method: "POST",
+    url: "/users",
+    preHandler: validate({
+        body: z.object({
+            name: z.string().min(1),
+            email: z.string().email()
+        })
+    }),
+    handler: async request => ({
+        created: true,
+        user: request.body
+    })
+});
+
+await app.listen({ port: 3000, host: "0.0.0.0" });</code></pre></div></section>
+<section class="doc-section" id="application"><h2>Application API</h2><p>Create an app with <code>new Novora(options)</code>. The constructor accepts Fastify server options and creates the underlying Fastify instance.</p><div class="api-list"><div><code>new Novora(options?)</code><p>Create a Novora application. <code>options</code> uses <code>FastifyServerOptions</code>.</p></div><div><code>createNovora(options?)</code><p>Factory function returning a new <code>Novora</code> instance.</p></div><div><code>app.server</code><p>Read-only access to the underlying <code>FastifyInstance</code>.</p></div><div><code>app.instance</code><p>Getter alias for the underlying Fastify instance.</p></div><div><code>app.validate(schemas)</code><p>Create a validation pre-handler from body, params, query or headers schemas.</p></div><div><code>app.setErrorHandler(handler)</code><p>Install a custom error handler. Novora-aware HTTP errors are serialized to JSON with status, code, message and details.</p></div><div><code>app.setNotFoundHandler(handler)</code><p>Set the Fastify not-found route handler.</p></div></div></section>
+<section class="doc-section" id="routing"><h2>Routing</h2><p>Route helpers accept a path and a Fastify route handler. They return the app instance, so route setup can be chained.</p><div class="api-list"><div><code>app.get(path, handler)</code><p>Register a GET route.</p></div><div><code>app.post(path, handler)</code><p>Register a POST route.</p></div><div><code>app.put(path, handler)</code><p>Register a PUT route.</p></div><div><code>app.patch(path, handler)</code><p>Register a PATCH route.</p></div><div><code>app.delete(path, handler)</code><p>Register a DELETE route.</p></div><div><code>app.head(path, handler)</code><p>Register a HEAD route.</p></div><div><code>app.options(path, handler)</code><p>Register an OPTIONS route.</p></div><div><code>app.all(path, handler)</code><p>Register a route for GET, POST, PUT, PATCH, DELETE, HEAD and OPTIONS.</p></div><div><code>app.route(options)</code><p>Register a full Fastify <code>RouteOptions</code> object. Use this form for route-level options such as <code>preHandler</code>, schema, config and handler.</p></div></div><h3>Routers and groups</h3><div class="api-list"><div><code>new Router(prefix?)</code><p>Create a route collection with an optional path prefix.</p></div><div><code>router.route(options)</code><p>Add a Fastify route definition with the router prefix applied.</p></div><div><code>router.get/post/put/patch/delete/head/options/all(path, handler)</code><p>Convenience methods for defining routes on a Router.</p></div><div><code>router.mount(router)</code><p>Copy another router's route definitions into this router.</p></div><div><code>router.definitions</code><p>Read the router's route definitions.</p></div><div><code>app.mount(router)</code><p>Mount a router's definitions on the application.</p></div><div><code>app.group(prefix, callback)</code><p>Create a prefixed router, pass it to the callback, then mount it.</p></div><div><code>createRouter(prefix?)</code><p>Factory function returning a new Router.</p></div></div><div class="code-block"><div class="code-head"><span>Grouped routes</span><button class="copy-button">Copy</button></div><pre><code>import { Novora, Router } from "novora";
+
+const app = new Novora();
+const api = new Router("/api/v1");
+
+api.get("/status", async () => ({ status: "ok" }));
+api.get("/users/:id", async request => ({ id: request.params.id }));
+
+app.mount(api);
+
+app.group("/admin", router => {
+    router.get("/dashboard", async () => ({ page: "dashboard" }));
+});
+
+await app.listen(3000);</code></pre></div></section>
+<section class="doc-section" id="plugins"><h2>Plugins, hooks and decorators</h2><div class="api-list"><div><code>app.register(plugin, options?)</code><p>Register a Fastify callback or async plugin.</p></div><div><code>app.use(plugin, options?)</code><p>Alias for <code>register</code>.</p></div><div><code>app.addHook(name, hook)</code><p>Register a Fastify lifecycle hook. The hook name and callback follow Fastify's hook API.</p></div><div><code>app.decorate(name, value)</code><p>Add a Fastify decorator.</p></div></div><p>Plugin registration is asynchronous in effect; await <code>app.ready()</code> when you need all plugins and routes to be initialized before continuing.</p></section>
+<section class="doc-section" id="health"><h2>Health endpoint</h2><p><code>app.health(path?)</code> adds a GET endpoint at <code>/health</code> by default. The response includes <code>status</code>, detected <code>runtime</code>, process <code>uptime</code> and an ISO timestamp. The method returns the app instance.</p><div class="code-block"><div class="code-head"><span>Health response</span><button class="copy-button">Copy</button></div><pre><code>{
+  "status": "ok",
+  "runtime": "node",
+  "uptime": 42.5,
+  "timestamp": "2026-11-22T12:00:00.000Z"
+}</code></pre></div></section>
+<section class="doc-section" id="server-lifecycle"><h2>Server lifecycle and testing</h2><div class="api-list"><div><code>app.listen(portOrOptions?)</code><p>Start the server. A numeric port listens on <code>0.0.0.0</code>; omitted options default to port 3000 on <code>127.0.0.1</code>. An options object uses Fastify listen options.</p></div><div><code>app.ready()</code><p>Await Fastify initialization and return the Novora app.</p></div><div><code>app.close()</code><p>Close the server and await completion.</p></div><div><code>app.inject(options)</code><p>Perform an in-process Fastify injection request, useful for tests without opening a network port.</p></div><div><code>app.printRoutes()</code><p>Return Fastify's printed route tree.</p></div></div></section>
+<section class="doc-section" id="validation"><h2>Validation</h2><p>Novora re-exports Zod as <code>z</code> and provides <code>validate(schemas)</code>, a Fastify pre-handler for request validation.</p><p>Supported schema keys are <code>body</code>, <code>params</code>, <code>query</code> and <code>headers</code>. Each schema uses Zod's <code>safeParse</code>. On failure, the request receives HTTP 400 with <code>error: "VALIDATION_ERROR"</code>, a message and the Zod issue list. On success, parsed data is assigned back to the request property.</p><div class="code-block"><div class="code-head"><span>Validation</span><button class="copy-button">Copy</button></div><pre><code>import { Novora, z, validate } from "novora";
+
+const app = new Novora();
+
+app.route({
+    method: "POST",
+    url: "/users",
+    preHandler: validate({
+        body: z.object({
+            username: z.string().min(3),
+            email: z.string().email()
+        })
+    }),
+    handler: async request => ({ user: request.body })
+});</code></pre></div><p>Exports: <code>validate</code>, <code>validateWith</code>, <code>ValidationSchemas</code> and <code>ValidationFailure</code>.</p></section>
+<section class="doc-section" id="cache"><h2>TTL cache</h2><p><code>TTLCache</code> is a small in-memory cache with per-entry expiration and a maximum entry count. The default TTL is 60,000 ms and the default maximum is 10,000 entries.</p><div class="api-list"><div><code>new TTLCache(options?)</code><p>Options: <code>defaultTtl</code> in milliseconds and <code>maxEntries</code>.</p></div><div><code>cache.set(key, value, ttl?)</code><p>Store a value. A TTL of zero means no expiration. Returns the cache.</p></div><div><code>cache.get(key)</code><p>Get a value, or <code>undefined</code> when missing or expired.</p></div><div><code>cache.has(key)</code><p>Check whether a non-expired value exists.</p></div><div><code>cache.delete(key)</code><p>Delete one key and return whether it existed.</p></div><div><code>cache.clear()</code><p>Remove all entries.</p></div><div><code>cache.clearPrefix(prefix)</code><p>Remove keys beginning with a prefix and return the number removed.</p></div><div><code>cache.size</code><p>Get the number of non-expired entries.</p></div><div><code>cache.getOrSet(key, factory, ttl?)</code><p>Return an existing value or create, store and return one.</p></div><div><code>createCache(options?)</code><p>Factory function returning a TTLCache.</p></div></div><p>Invalid negative or non-finite TTL values throw a <code>RangeError</code>. When capacity is reached, adding a new key evicts the oldest inserted key.</p></section>
+<section class="doc-section" id="configuration"><h2>Configuration</h2><p>Configuration helpers use dotenv and Zod. <code>loadConfig</code> optionally loads an environment file, then parses <code>process.env</code> using the supplied schema.</p><div class="code-block"><div class="code-head"><span>config.ts</span><button class="copy-button">Copy</button></div><pre><code>import { loadConfig, z } from "novora";
+
+const config = loadConfig({
+    schema: z.object({
+        PORT: z.coerce.number().default(3000),
+        NODE_ENV: z.enum(["development", "production", "test"]).default("development")
+    }),
+    path: ".env"
+});</code></pre></div><div class="api-list"><div><code>loadConfig({ schema, path?, override? })</code><p>Load dotenv values and parse process.env. <code>override</code> defaults to false.</p></div><div><code>parseConfig(source, schema)</code><p>Parse a supplied object with a Zod schema without loading dotenv.</p></div><div><code>ConfigOptions</code><p>Type containing schema, optional path and optional override.</p></div></div></section>
+<section class="doc-section" id="errors"><h2>Errors</h2><p><code>NovoraError</code> extends Error and carries <code>statusCode</code>, <code>code</code> and optional <code>details</code>. Use the helpers to create consistent HTTP errors.</p><div class="api-list"><div><code>new NovoraError(message, statusCode?, code?, details?)</code><p>Construct a Novora-aware error. Defaults: 500 and <code>NOVORA_ERROR</code>.</p></div><div><code>createError(statusCode, message, code?, details?)</code><p>Factory for a NovoraError.</p></div><div><code>badRequest(message?, details?)</code><p>HTTP 400 · <code>BAD_REQUEST</code>.</p></div><div><code>unauthorized(message?)</code><p>HTTP 401 · <code>UNAUTHORIZED</code>.</p></div><div><code>forbidden(message?)</code><p>HTTP 403 · <code>FORBIDDEN</code>.</p></div><div><code>notFound(message?)</code><p>HTTP 404 · <code>NOT_FOUND</code>.</p></div><div><code>conflict(message?, details?)</code><p>HTTP 409 · <code>CONFLICT</code>.</p></div><div><code>tooManyRequests(message?)</code><p>HTTP 429 · <code>TOO_MANY_REQUESTS</code>.</p></div><div><code>internalServerError(message?)</code><p>HTTP 500 · <code>INTERNAL_SERVER_ERROR</code>.</p></div></div><p>When you install a custom handler using <code>app.setErrorHandler</code>, Novora serializes NovoraError instances and errors with HTTP status codes from 400 to 599 as JSON.</p></section>
+<section class="doc-section" id="types"><h2>Exported types</h2><ul class="plain-list"><li><code>NovoraOptions</code> — alias of FastifyServerOptions.</li><li><code>NovoraPlugin</code> — Fastify callback or async plugin type.</li><li><code>ValidationSchemas</code> — optional body, params, query and headers Zod schemas.</li><li><code>ValidationFailure</code> — validation error response shape.</li><li><code>CacheOptions</code> — defaultTtl and maxEntries.</li><li><code>ConfigOptions&lt;T&gt;</code> — schema, path and override.</li><li><code>FastifyInstance</code>, <code>FastifyListenOptions</code>, <code>FastifyPluginAsync</code>, <code>FastifyPluginCallback</code>, <code>FastifyServerOptions</code>, <code>RouteHandlerMethod</code>, <code>RouteOptions</code>, <code>InjectOptions</code>.</li></ul></section>
+<section class="doc-section" id="integrations"><h2>Re-exported integrations</h2><p>These are library exports, not custom Novora implementations. Refer to each upstream package for its complete options and behavior.</p><div class="integration-grid"><div><strong>HTTP and routing</strong><span>Fastify</span></div><div><strong>Security</strong><span>cors · helmet · cookie · jwt · bcrypt</span></div><div><strong>Traffic</strong><span>compress · rateLimit · pino</span></div><div><strong>Files and images</strong><span>multipart · staticFiles · sharp</span></div><div><strong>Realtime</strong><span>websocket · SocketIOServer</span></div><div><strong>API documentation</strong><span>swagger · swaggerUI</span></div><div><strong>Data and templates</strong><span>z · Redis · graphql · Handlebars</span></div><div><strong>Utilities</strong><span>dotenv · cron</span></div><div><strong>Email</strong><span>nodemailer</span></div><div><strong>JWT tooling</strong><span>jwtLibrary</span></div></div><h3>Complete export names</h3><p><code>Fastify</code>, <code>cors</code>, <code>helmet</code>, <code>compress</code>, <code>cookie</code>, <code>multipart</code>, <code>rateLimit</code>, <code>staticFiles</code>, <code>jwt</code>, <code>websocket</code>, <code>swagger</code>, <code>swaggerUI</code>, <code>z</code>, <code>bcrypt</code>, <code>cron</code>, <code>Handlebars</code>, <code>Redis</code>, <code>jwtLibrary</code>, <code>nodemailer</code>, <code>SocketIOServer</code>, <code>sharp</code>, <code>dotenv</code>, <code>pino</code>, <code>graphql</code>, <code>buildSchema</code>, <code>parse</code>, <code>validateGraphQL</code>, <code>execute</code>.</p></section>
+<section class="doc-section" id="development"><h2>Development</h2><p>Clone the repository, install dependencies, then run the package scripts.</p><div class="code-block"><div class="code-head"><span>Node.js</span><button class="copy-button">Copy</button></div><pre><code>npm install
+npm run typecheck
+npm run build
+npm test</code></pre></div><div class="code-block"><div class="code-head"><span>Bun</span><button class="copy-button">Copy</button></div><pre><code>bun install
+bun run typecheck
+bun run build
+bun run test</code></pre></div></section>
+<section class="doc-section" id="license"><h2>License and project links</h2><p>Novora is released under the MIT License. Source code, releases and issue tracking are hosted on GitHub.</p><div class="link-row"><a class="button secondary" href="https://github.com/0XOPx/Novora" target="_blank" rel="noreferrer">Source repository ↗</a><a class="button secondary" href="https://github.com/0XOPx/Novora/releases" target="_blank" rel="noreferrer">Releases ↗</a></div></section>
+<div class="docs-next"><span>KEEP EXPLORING</span><a href="examples.html">Browse complete examples →</a><a href="playground.html">Try the interactive playground →</a></div>
+</main></div><script src="assets/site.js"></script></body></html>
