@@ -6,8 +6,7 @@ import Fastify, {
     type FastifyListenOptions,
     type FastifyPluginCallback,
     type FastifyPluginAsync,
-    type InjectOptions,
-    type InjectResponse
+    type InjectOptions
 } from "fastify";
 import { TTLCache } from "./cache.js";
 import { validate, type ValidationSchemas } from "./validation.js";
@@ -173,7 +172,7 @@ export class Novora {
                     details: error.details
                 });
             }
-            return handler(error, request, reply);
+            return handler(error as Error, request, reply);
         });
         return this;
     }
@@ -213,7 +212,7 @@ export class Novora {
         await this.server.close();
     }
 
-    async inject(options: string | InjectOptions): Promise<InjectResponse> {
+    async inject(options: string | InjectOptions) {
         return this.server.inject(options);
     }
 
@@ -228,9 +227,12 @@ export class Novora {
 
 export const createNovora = (options: NovoraOptions = {}): Novora => new Novora(options);
 export const createRouter = (prefix = ""): Router => new Router(prefix);
-export { TTLCache, validate, NovoraError, createError };
+export { TTLCache, createCache } from "./cache.js";
+export { validate, NovoraError, createError };
+export { loadConfig, parseConfig } from "./config.js";
+export { badRequest, unauthorized, forbidden, notFound, conflict, tooManyRequests, internalServerError } from "./errors.js";
 export type { ValidationSchemas };
-export type { FastifyInstance, FastifyListenOptions, FastifyPluginAsync, FastifyPluginCallback, FastifyServerOptions, RouteHandlerMethod, RouteOptions, InjectOptions, InjectResponse };
+export type { FastifyInstance, FastifyListenOptions, FastifyPluginAsync, FastifyPluginCallback, FastifyServerOptions, RouteHandlerMethod, RouteOptions, InjectOptions };
 export { Fastify };
 export { default as cors } from "@fastify/cors";
 export { default as helmet } from "@fastify/helmet";

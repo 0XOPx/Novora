@@ -51,7 +51,7 @@ describe("Novora application", () => {
 
     it("supports plugin registration aliases", async () => {
         app = new Novora({ logger: false });
-        app.use(async instance => {
+        app.use(async (instance: any) => {
             instance.decorate("featureEnabled", true);
         });
         await app.ready();

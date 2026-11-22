@@ -49,15 +49,16 @@ import { Novora, z, validate } from "novora";
 
 const app = new Novora({ logger: true });
 
-app.post("/users", {
+app.route({
+    method: "POST",
+    url: "/users",
     preHandler: validate({
         body: z.object({
             name: z.string().min(1),
             email: z.string().email()
         })
-    })
-}, async request => {
-    return { created: true, user: request.body };
+    }),
+    handler: async request => ({ created: true, user: request.body })
 });
 
 await app.listen({ port: 3000, host: "0.0.0.0" });
