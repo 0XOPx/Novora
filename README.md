@@ -6,7 +6,7 @@ Novora is a feature-rich web framework for building APIs and web servers with **
 
 | Runtime | JavaScript | TypeScript |
 | --- | --- | --- |
-| Node.js 20+ | Supported | Supported with tsx or compiled output |
+| Node.js 22+ | Supported | Supported with tsx or compiled output |
 | Bun 1.2+ | Supported | Native execution |
 
 ## Installation
