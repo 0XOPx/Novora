@@ -9,7 +9,6 @@ import Fastify, {
     type InjectOptions,
     type InjectResponse
 } from "fastify";
-import type { ZodType } from "zod";
 import { TTLCache } from "./cache.js";
 import { validate, type ValidationSchemas } from "./validation.js";
 import { NovoraError, createError } from "./errors.js";
@@ -191,7 +190,7 @@ export class Novora {
     health(path = "/health"): this {
         this.get(path, async () => ({
             status: "ok",
-            runtime: typeof Bun !== "undefined" ? "bun" : "node",
+            runtime: process.versions.bun ? "bun" : "node",
             uptime: process.uptime(),
             timestamp: new Date().toISOString()
         }));

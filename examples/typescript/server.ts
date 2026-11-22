@@ -13,7 +13,7 @@ app.health();
 app.get("/", async () => ({
     name: "Novora",
     version: "1.0.0",
-    runtime: typeof Bun !== "undefined" ? "bun" : "node"
+    runtime: process.versions.bun ? "bun" : "node"
 }));
 
 app.group("/api/v1", router => {
@@ -22,17 +22,20 @@ app.group("/api/v1", router => {
     }));
 });
 
-app.post("/api/v1/users", {
+app.route({
+    method: "POST",
+    url: "/api/v1/users",
     preHandler: validate({
         body: z.object({
             name: z.string().min(1),
             email: z.string().email()
         })
-    })
-}, async request => {
-    const user = request.body;
-    cache.set("last-user", user);
-    return { created: true, user };
+    }),
+    handler: async request => {
+        const user = request.body;
+        cache.set("last-user", user);
+        return { created: true, user };
+    }
 });
 
 await app.listen({ port: Number(process.env.PORT ?? 3000), host: "0.0.0.0" });

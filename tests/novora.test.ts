@@ -102,7 +102,7 @@ describe("TTLCache", () => {
 describe("Validation", () => {
     it("returns validation errors for invalid payloads", async () => {
         const app = new Novora({ logger: false });
-        app.post("/users", { preHandler: validate({ body: z.object({ name: z.string() }) }) } as any, async () => ({ ok: true }));
+        app.route({ method: "POST", url: "/users", preHandler: validate({ body: z.object({ name: z.string() }) }), handler: async () => ({ ok: true }) });
         const response = await app.inject({ method: "POST", url: "/users", payload: { name: 42 } });
         expect(response.statusCode).toBe(400);
         await app.close();
